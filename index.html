@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MC Tool</title>
+    <script src="src/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
             --bg: #008080; --silver: #c0c0c0; --white: #ffffff;
@@ -75,9 +76,7 @@
             padding-top: 8px; 
             margin-top: 8px; 
             position: relative;
-            transition: transform 0.3s ease;
             background: inherit;
-            z-index: 1;
         }
         .subpack-btns { position: absolute; top: 5px; right: 0; display: flex; gap: 2px; }
         .sub-btn { 
@@ -188,7 +187,7 @@
             <div class="btn-row" style="margin-top:20px">
                 <button onclick="showPreview()" style="flex:1">PREVIEW</button>
                 <button onclick="triggerFileLoad()" style="flex:1">LOAD</button>
-                <button onclick="exportJSON()" style="flex:1; background:var(--blue); color:white">DOWNLOAD</button>
+                <button onclick="openDownloadDialog()" style="flex:1; background:var(--blue); color:white">DOWNLOAD</button>
             </div>
             <input type="file" id="file-input" accept=".json" class="hidden" onchange="loadManifestFile(this)">
         </div>
@@ -221,6 +220,17 @@
                 <button onclick="copyRawCode()" style="width:100%; margin-top:10px">Copy</button>
             </div>
         </div>
+        <div id="download-modal" class="window hidden" style="max-width:300px">
+            <div class="title-bar"><span>Export Format</span></div>
+            <div class="content">
+                <p style="margin:0 0 10px 0; text-align:center;">JSON / full file structure.</p>
+                <div class="btn-row" style="justify-content:center; gap:15px;">
+                    <button onclick="exportJSON()" style="flex:1;">JSON</button>
+                    <button onclick="exportMcPack()" style="flex:1;">ZIP</button>
+                </div>
+                <button onclick="closeModals()" style="width:100%; margin-top:10px; background:#ddd; color:#000;">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -245,18 +255,9 @@
             document.querySelectorAll('.font-slider, .font-val').forEach(el => el.value = v);
         }
 
-        function copyById(id) {
-            universalCopy(document.getElementById(id).value);
-        }
-
-        function forceCopy(id) {
-            universalCopy(document.getElementById(id).innerText.replace("Key: ", ""));
-        }
-
-        function copyRawCode() {
-            universalCopy(document.getElementById('preview-box').innerText);
-        }
-
+        function copyById(id) { universalCopy(document.getElementById(id).value); }
+        function forceCopy(id) { universalCopy(document.getElementById(id).innerText.replace("Key: ", "")); }
+        function copyRawCode() { universalCopy(document.getElementById('preview-box').innerText); }
         function toggleTheme() { document.body.classList.toggle('dark-mode'); }
 
         function switchMode(mode) {
@@ -282,8 +283,8 @@
         }
 
         function stringToUUID(str, offset) {
-            let hex = "";
             let buffer = getCipherBuffer(str);
+            let hex = "";
             for(let i=0; i<buffer.length; i++) {
                 let val = (buffer.charCodeAt(i) + offset) % 256;
                 hex += val.toString(16).padStart(2, '0');
@@ -323,9 +324,7 @@
             }
         }
 
-        function triggerFileLoad() {
-            document.getElementById('file-input').click();
-        }
+        function triggerFileLoad() { document.getElementById('file-input').click(); }
 
         function loadManifestFile(input) {
             const file = input.files[0];
@@ -352,9 +351,7 @@
                     }
                     renderSubpacks();
                     alert("Manifest loaded successfully!");
-                } catch (err) {
-                    alert("Invalid JSON file.");
-                }
+                } catch (err) { alert("Invalid JSON file."); }
             };
             reader.readAsText(file);
             input.value = "";
@@ -376,6 +373,11 @@
             document.getElementById('load-modal').classList.remove('hidden');
         }
 
+        function openDownloadDialog() {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('download-modal').classList.remove('hidden');
+        }
+
         function performReverse() {
             const h = document.getElementById('load-h').value.trim();
             const m = document.getElementById('load-m').value.trim();
@@ -392,44 +394,13 @@
 
         function closeModals() {
             document.getElementById('modal-overlay').classList.add('hidden');
-            document.getElementById('custom-modal').classList.add('hidden');
-            document.getElementById('load-modal').classList.add('hidden');
-            document.getElementById('preview-modal').classList.add('hidden');
+            document.querySelectorAll('#modal-overlay .window').forEach(w => w.classList.add('hidden'));
         }
 
         function addSubpack() {
             const n = subpacks.length + 1;
-            subpacks.push({ 
-                folder_name: "Folder-" + n, 
-                name: "\n§l§3Folder-" + n + " §r\nDescriptions goes here", 
-                memory_tier: n 
-            });
+            subpacks.push({ folder_name: "Folder-" + n, name: "\n§l§3Folder-" + n + " §r\nDescriptions goes here", memory_tier: n });
             renderSubpacks();
-        }
-
-        function moveSubpack(i, dir) {
-            const targetIndex = i + dir;
-            if(targetIndex < 0 || targetIndex >= subpacks.length) return;
-            const container = document.getElementById('subpack-container');
-            const items = container.querySelectorAll('.subpack-item');
-            const el1 = items[i];
-            const el2 = items[targetIndex];
-            const dist = el2.offsetTop - el1.offsetTop;
-            el1.style.transform = `translateY(${dist}px)`;
-            el2.style.transform = `translateY(${-dist}px)`;
-            setTimeout(() => {
-                const temp = subpacks[i];
-                subpacks[i] = subpacks[targetIndex];
-                subpacks[targetIndex] = temp;
-                subpacks.forEach((s, idx) => s.memory_tier = idx + 1);
-                renderSubpacks();
-            }, 300);
-        }
-
-        function removeSubpack(i) { 
-            subpacks.splice(i, 1); 
-            subpacks.forEach((s, idx) => s.memory_tier = idx + 1); 
-            renderSubpacks(); 
         }
 
         function renderSubpacks() {
@@ -439,17 +410,19 @@
                 const div = document.createElement('div');
                 div.className = "subpack-item";
                 div.innerHTML = `
-                    <div class="subpack-btns">
-                        <button class="sub-btn" onclick="moveSubpack(${i}, -1)">▲</button>
-                        <button class="sub-btn" onclick="moveSubpack(${i}, 1)">▼</button>
-                        <button class="sub-btn del-sub" onclick="removeSubpack(${i})">×</button>
-                    </div>
+                    <div class="subpack-btns"><button class="sub-btn del-sub" onclick="removeSubpack(${i})">×</button></div>
                     <label>Folder Name</label><input value="${s.folder_name}" oninput="subpacks[${i}].folder_name=this.value">
                     <label>Display Name</label><textarea oninput="subpacks[${i}].name=this.value">${s.name}</textarea>
                     <label>Memory Tier</label><input type="number" value="${s.memory_tier || (i+1)}" readonly class="accent-well">
                 `;
                 container.appendChild(div);
             });
+        }
+
+        function removeSubpack(i) { 
+            subpacks.splice(i, 1); 
+            subpacks.forEach((s, idx) => s.memory_tier = idx + 1); 
+            renderSubpacks(); 
         }
 
         function getManifest() {
@@ -480,11 +453,30 @@
         }
 
         function exportJSON() {
+            const packName = document.getElementById('m-name').value || "manifest";
             const blob = new Blob([JSON.stringify(getManifest(), null, 4)], {type: "application/json"});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = "manifest.json";
+            a.download = `${packName}.json`;
             a.click();
+            closeModals();
+        }
+
+        async function exportMcPack() {
+            const zip = new JSZip();
+            const packName = document.getElementById('m-name').value || "UnnamedPack";
+            const root = zip.folder(packName);
+            root.file("manifest.json", JSON.stringify(getManifest(), null, 4));
+            if (subpacks.length > 0) {
+                const spFolder = root.folder("subpacks");
+                subpacks.forEach(s => spFolder.folder(s.folder_name));
+            }
+            const content = await zip.generateAsync({type:"blob"});
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(content);
+            a.download = `${packName}.mcpack`;
+            a.click();
+            closeModals();
         }
     </script>
 </body>
