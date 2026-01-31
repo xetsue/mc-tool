@@ -67,10 +67,14 @@ To recover the original character code, the system subtracts the known offset us
 
 
 ---
-### **Limitations**
+### **Limitations & Extra Notes**
 
 > 1.  **Truncation:** The UUID format only has room for 128 bits of data. Consequently, only the first 12 characters of any key can be perfectly recovered which is a specific requirement for this use case only.
 
 > 2.  **Hardcoded Constants:** The "Security" of the key depends entirely on the secrecy of the offsets (VALUE_X and VALUE_Y). If the offsets are known, the "encryption" is functionally equivalent to a Caesar Cipher. The match of this sequence was unintentional but was interesting enough to be included nonetheless. 
 
 > 3.  **Forced Bits:** Since characters 13 and 17 in the UUID are hardcoded to `4` and `a` for compliance, the data originally mapped to those positions is lost and cannot be recovered during the backtrace.
+
+> 4. The UUID Key usage allows alphanumeric characters along with printable ascii (Typically used for password combinations) up to 12 characters. Although seems like this is simplified, the possible simple combination of printable ascii combination (Small/Capital alphabets, numbers, symbols, spaces, etc.) goes up to `546,108,599,233,516,079,517,120` or `546 Septillion` or `5.4x10^(23)`. Human brain can barely comprehend this number. To put into perspective, brute-force tool tests around 100 billion combinations per second, even so it would still take over 170,000 years to complete this 1-12 combination range.  Safe to say users can take their time to come up with a unique combination ranging from 1 to 12 characters with no problem.
+
+> The math is done with (Number Of Character Variations) Powered by (Length of this combination), varies from 1 to 12 as the length and summed up as total value. 
