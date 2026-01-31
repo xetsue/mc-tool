@@ -1,5 +1,5 @@
 # mc-tool
 Minecraft Manifest Json Editor / UUID Generator
 ## Usage
-1. Offline use: Download `index.html` and open in any browser.
-2. [Online Use](https://xetsue.github.io/mc-tool/)
+A. Offline use: Download [Source.zip](https://github.com/xetsue/mc-tool/releases/tag/v1.0) , unzip, open `index.html` in any browser.
+B. [Online Use](https://xetsue.github.io/mc-tool/)
