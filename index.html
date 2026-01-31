@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC Tool</title>
+    <style>
+        :root {
+            --bg: #008080; --silver: #c0c0c0; --white: #ffffff;
+            --dark-gray: #808080; --black: #000000; --blue: #000080;
+            --text-main: #000000; --btn-theme: #c0c0c0;
+            --base-font: 13px;
+            --accent-bg: #008b8b; --accent-text: #ffffff;
+        }
+        body.dark-mode {
+            --bg: #1a1a1a; --silver: #333333; --white: #1e1e1e;
+            --dark-gray: #000000; --black: #ffffff; --blue: #000000;
+            --text-main: #ffffff; --btn-theme: #ff0000;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg); color: var(--text-main);
+            font-family: "Monospace", monospace; margin: 0;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 10px;
+            font-size: var(--base-font);
+        }
+        .window {
+            background: var(--silver); width: 100%; max-width: 480px;
+            border: 2px solid; border-color: var(--white) var(--dark-gray) var(--dark-gray) var(--white);
+            box-shadow: 1px 1px 0 0 var(--black); padding: 2px;
+        }
+        .title-bar {
+            background: var(--blue); color: white; padding: 3px 5px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 14px; font-weight: bold; height: 30px;
+        }
+        .controls { display: flex; gap: 5px; align-items: center; }
+        .ctrl-btn {
+            background: var(--btn-theme); border: 1px solid;
+            border-color: var(--white) var(--dark-gray) var(--dark-gray) var(--white);
+            width: 20px; height: 20px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; font-size: 10px; color: #000;
+            font-weight: bold;
+        }
+        .content { padding: 10px; }
+        .well {
+            background: var(--white); border: 2px solid;
+            border-color: var(--dark-gray) var(--white) var(--white) var(--dark-gray);
+            padding: 8px; margin-bottom: 10px; font-size: 1em;
+            word-break: break-all; color: var(--text-main);
+        }
+        .accent-well {
+            background: var(--accent-bg) !important;
+            color: var(--accent-text) !important;
+        }
+        label { display: block; font-size: 0.9em; font-weight: bold; margin-bottom: 2px; }
+        input, select, textarea {
+            width: 100%; background: var(--white); color: var(--text-main);
+            border: 2px solid; border-color: var(--dark-gray) var(--white) var(--white) var(--dark-gray);
+            font-family: inherit; padding: 4px; font-size: 1em;
+        }
+        .btn-row { display: flex; gap: 5px; margin-top: 10px; }
+        button {
+            background: var(--silver); border: 2px solid;
+            border-color: var(--white) var(--dark-gray) var(--dark-gray) var(--white);
+            font-family: inherit; padding: 5px 10px; cursor: pointer; color: var(--text-main);
+            font-weight: bold;
+        }
+        button:active { border-color: var(--dark-gray) var(--white) var(--white) var(--dark-gray); }
+        .hidden { display: none !important; }
+        .key-tag { background: #808080; color: #c0c0c0; padding: 2px 5px; cursor: pointer; font-size: 0.8em; font-weight: bold; }
+        .subpack-item { 
+            border-top: 1px dashed var(--dark-gray); 
+            padding-top: 8px; 
+            margin-top: 8px; 
+            position: relative;
+            transition: transform 0.3s ease;
+            background: inherit;
+            z-index: 1;
+        }
+        .subpack-btns { position: absolute; top: 5px; right: 0; display: flex; gap: 2px; }
+        .sub-btn { 
+            background: var(--silver); 
+            border: 2px solid;
+            border-color: var(--white) var(--dark-gray) var(--dark-gray) var(--white);
+            padding: 2px 6px; cursor: pointer; font-size: 10px; font-weight: bold;
+        }
+        .del-sub { background: #ff0000; color: #fff; }
+        .input-with-btn { display: flex; gap: 4px; align-items: center; margin-bottom: 10px; }
+        .font-slider { width: 60px; height: 10px; cursor: pointer; margin: 0 5px; }
+        .font-val { width: 35px; height: 20px; font-size: 10px; padding: 0; text-align: center; background: #fff; color: #000; }
+        .pre-view { white-space: pre-wrap; font-family: monospace; font-size: 0.9em; max-height: 300px; overflow-y: auto; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div id="boot-screen" class="window">
+        <div class="title-bar"><span>SELECT_MODE.SYS</span></div>
+        <div class="content">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button onclick="switchMode('uuid')">UUID</button>
+                <button onclick="switchMode('manifest')">MANIFEST</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="uuid-app" class="window hidden">
+        <div class="title-bar">
+            <span>UUID_GEN.EXE</span>
+            <div class="controls">
+                <input type="range" min="10" max="24" value="13" class="font-slider" oninput="updateFontSize(this.value)">
+                <input type="number" value="13" class="font-val" id="fv-u" oninput="updateFontSize(this.value)">
+                <button class="ctrl-btn" onclick="toggleTheme()">月</button>
+                <button class="ctrl-btn" onclick="goHome()">✖</button>
+            </div>
+        </div>
+        <div class="content">
+            <label>Key:</label>
+            <div class="well"><span id="u-key-val" style="cursor:pointer;text-decoration:underline" onclick="forceCopy('u-key-val')">-------</span></div>
+            
+            <label>Header UUID:</label>
+            <div class="input-with-btn">
+                <input id="u-header-input" class="accent-well">
+                <button onclick="copyById('u-header-input')">⛶</button>
+            </div>
+            
+            <label>Module UUID:</label>
+            <div class="input-with-btn">
+                <input id="u-module-input" class="accent-well">
+                <button onclick="copyById('u-module-input')">⛶</button>
+            </div>
+
+            <div class="btn-row">
+                <button onclick="openLoad()">Load</button>
+                <div style="flex-grow:1"></div>
+                <button onclick="openCustom()">Custom</button>
+                <button onclick="generateRandom()">Random</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="manifest-app" class="window hidden">
+        <div class="title-bar">
+            <span>MANIFEST_JSON.EXE</span>
+            <div class="controls">
+                <input type="range" min="10" max="24" value="13" class="font-slider" oninput="updateFontSize(this.value)">
+                <input type="number" value="13" class="font-val" id="fv-m" oninput="updateFontSize(this.value)">
+                <button class="ctrl-btn" onclick="toggleTheme()">月</button>
+                <button class="ctrl-btn" onclick="goHome()">✖</button>
+            </div>
+        </div>
+        <div class="content" style="max-height: 85vh; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div class="btn-row" style="margin:0">
+                    <button onclick="openCustom()">+</button>
+                    <button onclick="generateRandom()">Generate</button>
+                </div>
+                <span class="key-tag" id="m-key-display" onclick="forceCopy('m-key-display')">Key: NONE</span>
+            </div>
+            
+            <fieldset style="border:1px solid var(--dark-gray)">
+                <legend style="font-size:0.8em; font-weight:bold;">Header</legend>
+                <label>Name</label><input id="m-name" value="User">
+                <label>Description</label><textarea id="m-desc">Custom Pack by User</textarea>
+                <div style="display:flex; gap:5px">
+                    <div style="flex:2"><label>UUID</label><input id="m-h-uuid" class="accent-well"></div>
+                    <div style="flex:1"><label>Ver</label><input id="m-h-ver" value="0.0.1"></div>
+                </div>
+                <label>Min Engine</label><input id="m-engine" value="1.2.6">
+            </fieldset>
+
+            <fieldset style="border:1px solid var(--dark-gray); margin-top:10px">
+                <legend style="font-size:0.8em; font-weight:bold;">Module</legend>
+                <label>Type</label><select id="m-m-type"><option>resources</option><option>data</option></select>
+                <div style="display:flex; gap:5px">
+                    <div style="flex:2"><label>UUID</label><input id="m-m-uuid" class="accent-well"></div>
+                    <div style="flex:1"><label>Ver</label><input id="m-m-ver" value="0.0.1"></div>
+                </div>
+            </fieldset>
+
+            <div style="margin-top:15px">
+                <label style="font-size:1.1em; border-bottom:1px solid var(--dark-gray); margin-bottom:10px">Subpack</label>
+                <div id="subpack-container"></div>
+                <button onclick="addSubpack()" style="margin-top:10px; width:40px; height:30px">+</button>
+            </div>
+            
+            <div class="btn-row" style="margin-top:20px">
+                <button onclick="showPreview()" style="flex:1">PREVIEW</button>
+                <button onclick="triggerFileLoad()" style="flex:1">LOAD</button>
+                <button onclick="exportJSON()" style="flex:1; background:var(--blue); color:white">DOWNLOAD</button>
+            </div>
+            <input type="file" id="file-input" accept=".json" class="hidden" onchange="loadManifestFile(this)">
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1000">
+        <div id="custom-modal" class="window hidden" style="max-width:280px">
+            <div class="title-bar"><span>Enter Key</span></div>
+            <div class="content">
+                <input type="text" id="custom-input" maxlength="12" placeholder="1-12 Chars">
+                <div class="btn-row"><button onclick="applyCustom()">OK</button><button onclick="closeModals()">Cancel</button></div>
+            </div>
+        </div>
+        <div id="load-modal" class="window hidden" style="max-width:320px">
+            <div class="title-bar"><span>Reverse Identity</span></div>
+            <div class="content">
+                <label>Header UUID:</label><input type="text" id="load-h">
+                <label style="margin-top:5px">Module UUID:</label><input type="text" id="load-m">
+                <div class="btn-row"><button onclick="performReverse()">Sync Pair</button><button onclick="closeModals()">Cancel</button></div>
+            </div>
+        </div>
+        <div id="preview-modal" class="window hidden" style="max-width:400px">
+            <div class="title-bar" style="position:relative;">
+                <span>Raw</span>
+                <button class="ctrl-btn" onclick="closeModals()" style="position:absolute; right:5px; width:24px; height:20px;">✖</button>
+            </div>
+            <div class="content">
+                <label>Code:</label>
+                <div id="preview-box" class="well pre-view"></div>
+                <button onclick="copyRawCode()" style="width:100%; margin-top:10px">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let subpacks = [];
+        const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
+
+        function universalCopy(text) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            alert("Copied to clipboard.");
+        }
+
+        function updateFontSize(v) {
+            document.documentElement.style.setProperty('--base-font', v + 'px');
+            document.querySelectorAll('.font-slider, .font-val').forEach(el => el.value = v);
+        }
+
+        function copyById(id) {
+            universalCopy(document.getElementById(id).value);
+        }
+
+        function forceCopy(id) {
+            universalCopy(document.getElementById(id).innerText.replace("Key: ", ""));
+        }
+
+        function copyRawCode() {
+            universalCopy(document.getElementById('preview-box').innerText);
+        }
+
+        function toggleTheme() { document.body.classList.toggle('dark-mode'); }
+
+        function switchMode(mode) {
+            document.getElementById('boot-screen').classList.add('hidden');
+            document.getElementById('uuid-app').classList.add('hidden');
+            document.getElementById('manifest-app').classList.add('hidden');
+            document.getElementById(mode + '-app').classList.remove('hidden');
+            generateRandom();
+        }
+
+        function goHome() {
+            document.querySelectorAll('.window').forEach(w => w.classList.add('hidden'));
+            document.getElementById('boot-screen').classList.remove('hidden');
+        }
+
+        function getCipherBuffer(key) {
+            let buf = key;
+            while(buf.length < 16) {
+                let char = buf[buf.length % key.length];
+                buf += String.fromCharCode(((char.charCodeAt(0) * 17) % 94) + 33);
+            }
+            return buf.slice(0, 16);
+        }
+
+        function stringToUUID(str, offset) {
+            let hex = "";
+            let buffer = getCipherBuffer(str);
+            for(let i=0; i<buffer.length; i++) {
+                let val = (buffer.charCodeAt(i) + offset) % 256;
+                hex += val.toString(16).padStart(2, '0');
+            }
+            for(let i=0; i<16; i++) {
+                let extra = (buffer.charCodeAt(i) * offset) % 256;
+                hex += extra.toString(16).padStart(2, '0');
+            }
+            let s = hex.slice(0, 32);
+            return `${s.slice(0,8)}-${s.slice(8,12)}-4${s.slice(13,16)}-a${s.slice(17,20)}-${s.slice(20,32)}`;
+        }
+
+        function uuidToKey(uuid, offset) {
+            let clean = uuid.replace(/-/g, '');
+            let str = "";
+            for(let i=0; i<24; i+=2) {
+                let byte = parseInt(clean.substr(i, 2), 16);
+                let charCode = (byte - offset);
+                while(charCode < 32) charCode += 256; 
+                str += String.fromCharCode(charCode % 256);
+            }
+            return str.slice(0, 12).replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+        }
+
+        function updateUI(key) {
+            const h = stringToUUID(key, 17);
+            const m = stringToUUID(key, 89);
+            const isUUID = !document.getElementById('uuid-app').classList.contains('hidden');
+            if(isUUID) {
+                document.getElementById('u-key-val').innerText = key;
+                document.getElementById('u-header-input').value = h;
+                document.getElementById('u-module-input').value = m;
+            } else {
+                document.getElementById('m-key-display').innerText = "Key: " + key;
+                document.getElementById('m-h-uuid').value = h;
+                document.getElementById('m-m-uuid').value = m;
+            }
+        }
+
+        function triggerFileLoad() {
+            document.getElementById('file-input').click();
+        }
+
+        function loadManifestFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    subpacks = [];
+                    if (json.header) {
+                        document.getElementById('m-name').value = json.header.name || "";
+                        document.getElementById('m-desc').value = json.header.description || "";
+                        document.getElementById('m-h-uuid').value = json.header.uuid || "";
+                        document.getElementById('m-h-ver').value = (json.header.version || []).join('.');
+                        document.getElementById('m-engine').value = (json.header.min_engine_version || []).join('.');
+                    }
+                    if (json.modules && json.modules[0]) {
+                        document.getElementById('m-m-type').value = json.modules[0].type || "resources";
+                        document.getElementById('m-m-uuid').value = json.modules[0].uuid || "";
+                        document.getElementById('m-m-ver').value = (json.modules[0].version || []).join('.');
+                    }
+                    if (json.subpacks && Array.isArray(json.subpacks)) {
+                        subpacks = json.subpacks;
+                    }
+                    renderSubpacks();
+                    alert("Manifest loaded successfully!");
+                } catch (err) {
+                    alert("Invalid JSON file.");
+                }
+            };
+            reader.readAsText(file);
+            input.value = "";
+        }
+
+        function openCustom() {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        function applyCustom() {
+            const val = document.getElementById('custom-input').value;
+            if(val) updateUI(val);
+            closeModals();
+        }
+
+        function openLoad() {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('load-modal').classList.remove('hidden');
+        }
+
+        function performReverse() {
+            const h = document.getElementById('load-h').value.trim();
+            const m = document.getElementById('load-m').value.trim();
+            let recovered = h ? uuidToKey(h, 17) : (m ? uuidToKey(m, 89) : "");
+            if(recovered) updateUI(recovered);
+            closeModals();
+        }
+
+        function generateRandom() {
+            let k = "";
+            for(let i=0; i<8; i++) k += CHARSET[Math.floor(Math.random()*CHARSET.length)];
+            updateUI(k);
+        }
+
+        function closeModals() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+            document.getElementById('custom-modal').classList.add('hidden');
+            document.getElementById('load-modal').classList.add('hidden');
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+
+        function addSubpack() {
+            const n = subpacks.length + 1;
+            subpacks.push({ 
+                folder_name: "Folder-" + n, 
+                name: "\n§l§3Folder-" + n + " §r\nDescriptions goes here", 
+                memory_tier: n 
+            });
+            renderSubpacks();
+        }
+
+        function moveSubpack(i, dir) {
+            const targetIndex = i + dir;
+            if(targetIndex < 0 || targetIndex >= subpacks.length) return;
+            const container = document.getElementById('subpack-container');
+            const items = container.querySelectorAll('.subpack-item');
+            const el1 = items[i];
+            const el2 = items[targetIndex];
+            const dist = el2.offsetTop - el1.offsetTop;
+            el1.style.transform = `translateY(${dist}px)`;
+            el2.style.transform = `translateY(${-dist}px)`;
+            setTimeout(() => {
+                const temp = subpacks[i];
+                subpacks[i] = subpacks[targetIndex];
+                subpacks[targetIndex] = temp;
+                subpacks.forEach((s, idx) => s.memory_tier = idx + 1);
+                renderSubpacks();
+            }, 300);
+        }
+
+        function removeSubpack(i) { 
+            subpacks.splice(i, 1); 
+            subpacks.forEach((s, idx) => s.memory_tier = idx + 1); 
+            renderSubpacks(); 
+        }
+
+        function renderSubpacks() {
+            const container = document.getElementById('subpack-container');
+            container.innerHTML = "";
+            subpacks.forEach((s, i) => {
+                const div = document.createElement('div');
+                div.className = "subpack-item";
+                div.innerHTML = `
+                    <div class="subpack-btns">
+                        <button class="sub-btn" onclick="moveSubpack(${i}, -1)">▲</button>
+                        <button class="sub-btn" onclick="moveSubpack(${i}, 1)">▼</button>
+                        <button class="sub-btn del-sub" onclick="removeSubpack(${i})">×</button>
+                    </div>
+                    <label>Folder Name</label><input value="${s.folder_name}" oninput="subpacks[${i}].folder_name=this.value">
+                    <label>Display Name</label><textarea oninput="subpacks[${i}].name=this.value">${s.name}</textarea>
+                    <label>Memory Tier</label><input type="number" value="${s.memory_tier || (i+1)}" readonly class="accent-well">
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function getManifest() {
+            const m = {
+                format_version: 1,
+                header: {
+                    description: document.getElementById('m-desc').value,
+                    name: document.getElementById('m-name').value,
+                    uuid: document.getElementById('m-h-uuid').value,
+                    version: document.getElementById('m-h-ver').value.split('.').map(v => parseInt(v) || 0),
+                    min_engine_version: document.getElementById('m-engine').value.split('.').map(v => parseInt(v) || 0)
+                },
+                modules: [{
+                    description: document.getElementById('m-desc').value,
+                    type: document.getElementById('m-m-type').value,
+                    uuid: document.getElementById('m-m-uuid').value,
+                    version: document.getElementById('m-m-ver').value.split('.').map(v => parseInt(v) || 0)
+                }]
+            };
+            if(subpacks.length) m.subpacks = subpacks;
+            return m;
+        }
+
+        function showPreview() {
+            document.getElementById('preview-box').innerText = JSON.stringify(getManifest(), null, 4);
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('preview-modal').classList.remove('hidden');
+        }
+
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify(getManifest(), null, 4)], {type: "application/json"});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "manifest.json";
+            a.click();
+        }
+    </script>
+</body>
+</html>
