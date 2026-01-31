@@ -31,7 +31,7 @@ v1.1 Changelong
 
 # UUID Generations
 1. Key to Version 4 UUID Generation (Using Forward Path)
-The process involved uses deterministic algorithm, meaning the same key will always produces the same UUID in an order of 3 stages and relying on modular arithmetic and character-to-byte mapping.
+The process involved uses deterministic algorithm, meaning the same key will always produces the same UUID in an order of 3 stages.  Multiple phase that include modular arithmetic and character-to-byte mapping.
 --- 
  I. Buffer Expansion (Deterministic Padding)
 When a submitted key is shorter <16 characters, the system expands it using a linear congruential logic to ensure enough entropy for a 32-character hex string.
