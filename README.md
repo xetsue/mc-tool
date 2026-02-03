@@ -16,7 +16,7 @@ v1.1 Changelong
 
 > Updated UUID key generation using deterministic algorithm. Refer to [UUID Generation Documentation.](https://github.com/xetsue/mc-tool/blob/main/README.md#uuid-generations)
 
-> As opposed to the older version that uses mathematical entropy and randomized seed based generation of seperate data. This method caused complications and it was impossible to retrieve keys by using the generated UUID. With the new algorithm, a single UUID can be decrypted back to obtain the key along the pair of said UUID. 
+> As opposed to the older version that used randomized entropy and inconsistent seed based generation. This method caused complications where it was impossible to retrieve keys by using the generated UUID. With the new algorithm, a single UUID can be decrypted back to obtain the key along the pair of said UUID. 
 
 
 ## Previews
@@ -31,7 +31,8 @@ v1.1 Changelong
 
 # UUID Generations
 1. Key to Version 4 UUID Generation (Using Forward Path)
-The process involved uses deterministic algorithm, meaning the same key will always produces the same UUID in an order of 3 stages.  Multiple phase that include modular arithmetic and character-to-byte mapping.
+The code's deterministic algorithm, allow the same key to always produces the same UUID.
+> Modular arithmetic and character-to-byte mapping.
 --- 
  I. Buffer Expansion (Deterministic Padding)
 When a submitted key is shorter <16 characters, the system expands it using a linear congruential logic to ensure enough entropy for a 32-character hex string.
@@ -54,13 +55,13 @@ The resulting 32-character hex string is forced into the standard UUID structure
 - **Result:** `xxxxxxxx-xxxx-4xxx-axxx-xxxxxxxxxxxx` 
 
 ---
-> Forward path mentioned early on is a Simplified explanation where one value is brought forward which made it possible to reverse the same math to backtrace the original key using the same exact conditions.
+> Forward path mentioned early on is a method to be brought forward which made it possible to reverse math used initially to backtrace retrieve original key by a small offset due to two character that was hardcoded in the UUID. 
 
 ### Hex to Byte Conversion
 The system strips the hyphens from the UUID and converts the first 24 hex characters back into a 12 decimal bytes.
 
 ### Inverse Offset Calculation
-To recover the original character code, the system subtracts the known offset used during generation as following:
+To recover the original character code, the code subtracts the known offset used during generation.
 - **Formula:** $RecoveredCode = (ByteValue - Offset)$
 - **Handling Underflow:** If the result falls below the printable ASCII range (32), the system wraps it back around:
   - $If (RecoveredCode < 32) \implies RecoveredCode + 256$
@@ -70,7 +71,7 @@ To recover the original character code, the system subtracts the known offset us
 ---
 ### **Limitations & Extra Notes**
 
-> 1.  **Truncation:** The UUID format only has room for 128 bits of data. Consequently, only the first 12 characters of any key can be perfectly recovered which is a specific requirement for this use case only.
+> 1.  **Truncation:** The UUID format only has room for 128 bits of data. Hence, only the first 12 characters of any key can be perfectly recovered which is a specific requirement for this use case only.
 
 > 2.  **Hardcoded Constants:** The "Security" of the key depends entirely on the secrecy of the offsets (VALUE_X and VALUE_Y). If the offsets are known, the "encryption" is functionally equivalent to a Caesar Cipher. The match of this sequence was unintentional but was interesting enough to be included nonetheless. 
 
